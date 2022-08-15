@@ -1,0 +1,1 @@
+npm install --save-dev typescript ts-node eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin prettier eslint-plugin-prettier eslint-config-prettier rollup rollup-plugin-generate-html-template @rollup/plugin-typescript ava

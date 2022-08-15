@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Automata</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        width: 100vw;
+        height: 100vh;
+        background-color: white;
+      }
+
+      #canvas-container {
+        width: 100%;
+        height: 100%;
+        padding: 2em;
+      }
+
+      #canvas-container > div {
+        width: 100%;
+        height: 100%;
+        /* box-shadow: 0 0 16px -4px rgba(255, 255, 255, 0.5); */
+      }
+
+      #canvas {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvas-container">
+      <div>
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
+  </body>
+</html>
