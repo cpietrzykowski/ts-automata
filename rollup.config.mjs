@@ -6,8 +6,12 @@ export default [
     input: "./src/index.ts",
     output: {
       file: "./build/app.js",
-      format: "cjs",
+      format: "iife",
+      name: "app",
       sourcemap: true,
+    },
+    watch: {
+      include: "src/**",
     },
     plugins: [
       typescript({

@@ -37,12 +37,20 @@
         width: 100%;
         height: 100%;
       }
+
+      .display-none {
+        display: none;
+      }
     </style>
   </head>
   <body>
     <div id="canvas-container">
       <div>
         <canvas id="canvas"></canvas>
+        <div id="scene-state" class="display-none">
+          <div id="scene-state-pause">&#x23f8;</div>
+          <div id="scene-state-stop">&#x23f9;</div>
+        </div>
       </div>
     </div>
   </body>
