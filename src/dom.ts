@@ -22,22 +22,16 @@ export interface FrameAnimationProvider {
  * @returns
  */
 export function onDocumentReady(
-  ready: (
-    document: Document,
-    wnd: Optional<NonNullable<(typeof window)["document"]["defaultView"]>>
-  ) => void,
+  ready: (document: Document) => void,
   document: typeof window.document = window.document
 ) {
-  // remove "nullness"
-  const _window = document.defaultView ?? undefined;
-
   if (document.readyState === "loading") {
     return document.addEventListener("DOMContentLoaded", function () {
-      return ready(document, _window);
+      return ready(document);
     });
   }
 
-  return ready(document, _window);
+  return ready(document);
 }
 
 /**

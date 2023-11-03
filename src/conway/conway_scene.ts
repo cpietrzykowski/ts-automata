@@ -1,8 +1,7 @@
-import { ScenePresenter } from "./canvas_stage";
-import { ConwaysWorld, ConwaysWrappedWorld, Dimension2D } from "./conway_world";
-import { FrameAnimationProvider } from "./dom";
-import { Scene, SceneRenderer2D, SceneSize } from "./scene";
-import { CellAddress } from "./world";
+import {ConwaysWorld, ConwaysWrappedWorld, Dimension2D} from './conway_world';
+import {FrameAnimationProvider} from '../dom';
+import {Scene} from '../scene';
+import {CellAddress} from './world';
 
 type SimplePoint = {
   x: number;
@@ -42,7 +41,7 @@ interface ConwaySceneOptions {
 export class ConwayScene extends Scene {
   protected options: ConwaySceneOptions = {
     cell_margin: 2.0,
-    cell_size: { width: 16.0, height: 16.0 },
+    cell_size: {width: 16.0, height: 16.0},
   };
 
   /**
@@ -51,10 +50,10 @@ export class ConwayScene extends Scene {
   _step = 0;
 
   world = new ConwaysWrappedWorld();
-  current_mouse_location: SimplePoint = { x: 0, y: 0 };
-  current_cell: CellAddress = { x: 0, y: 0 };
+  current_mouse_location: SimplePoint = {x: 0, y: 0};
+  current_cell: CellAddress = {x: 0, y: 0};
 
-  grid_offset: GridOffset = { x: 0.0, y: 0.0 };
+  grid_offset: GridOffset = {x: 0.0, y: 0.0};
 
   t_since_last_update = 0;
 
@@ -73,7 +72,7 @@ export class ConwayScene extends Scene {
 
   constructor(
     protected readonly provider: FrameAnimationProvider,
-    defaults?: ConwaySceneOptions
+    defaults?: ConwaySceneOptions,
   ) {
     super();
     if (defaults !== undefined) {
@@ -88,24 +87,24 @@ export class ConwayScene extends Scene {
 
   onMounted(canvas: HTMLCanvasElement): void {
     canvas.addEventListener(
-      "wheel",
+      'wheel',
       (event) => {
         this.onWheel(event as WheelEvent);
       },
-      { passive: true }
+      {passive: true},
     );
 
-    canvas.addEventListener("mousemove", (event) => {
+    canvas.addEventListener('mousemove', (event) => {
       this.onMouseMove(event as MouseEvent);
     });
 
-    canvas.addEventListener("mousedown", (event) =>
-      this.onMouseDown(event as MouseEvent)
+    canvas.addEventListener('mousedown', (event) =>
+      this.onMouseDown(event as MouseEvent),
     );
-    canvas.addEventListener("click", (event) =>
-      this.onMouseClick(event as MouseEvent)
+    canvas.addEventListener('click', (event) =>
+      this.onMouseClick(event as MouseEvent),
     );
-    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+    canvas.addEventListener('contextmenu', (event) => event.preventDefault());
   }
 
   onWheel(event: WheelEvent) {
@@ -136,22 +135,22 @@ export class ConwayScene extends Scene {
     const mouseX = event.x - this.bounds.left;
     const mouseY = event.y - this.bounds.top;
 
-    const this_cell = this.getCellAt({ x: mouseX, y: mouseY });
+    const this_cell = this.getCellAt({x: mouseX, y: mouseY});
     this.world.setCell(this_cell, !this.world.cellAt(this_cell));
   }
 
   getCellAt(point: typeof this.current_mouse_location) {
-    const { width: cell_width, height: cell_height } = this.options.cell_size;
+    const {width: cell_width, height: cell_height} = this.options.cell_size;
     const x = Math.floor((point.x - this.grid_offset.x) / cell_width);
     const y = Math.floor((point.y - this.grid_offset.y) / cell_height);
-    return { x, y };
+    return {x, y};
   }
 
   protected sizeChanged(canvas: HTMLCanvasElement, size: SceneSize): void {
     this.bounds = canvas.getBoundingClientRect();
 
-    const { width: scene_width, height: scene_height } = size;
-    const { width: cell_width, height: cell_height } = this.options.cell_size;
+    const {width: scene_width, height: scene_height} = size;
+    const {width: cell_width, height: cell_height} = this.options.cell_size;
 
     const half_res_w = scene_width / 2.0;
     const half_res_h = scene_height / 2.0;
@@ -163,7 +162,7 @@ export class ConwayScene extends Scene {
     // initialize cell array
     const x_cells = Math.ceil((scene_width - this.grid_offset.x) / cell_width);
     const y_cells = Math.ceil(
-      (scene_height - this.grid_offset.y) / cell_height
+      (scene_height - this.grid_offset.y) / cell_height,
     );
     this.world.setSize({
       width: x_cells,
@@ -172,19 +171,19 @@ export class ConwayScene extends Scene {
   }
 
   renderWorld(ctx: CanvasRenderingContext2D, world: ConwaysWorld) {
-    const { width: cell_width, height: cell_height } = this.options.cell_size;
+    const {width: cell_width, height: cell_height} = this.options.cell_size;
     const x_margin = this.options.cell_margin;
     const y_margin = this.options.cell_margin;
 
     ctx.save();
-    ctx.strokeStyle = "blue";
+    ctx.strokeStyle = 'blue';
     for (let y = this.grid_offset.y; y < this.size.height; y += cell_height) {
       for (let x = this.grid_offset.x; x < this.size.width; x += cell_width) {
         ctx.strokeRect(
           x + x_margin,
           y + y_margin,
           cell_width - x_margin * 2.0,
-          cell_height - y_margin * 2.0
+          cell_height - y_margin * 2.0,
         );
       }
     }
@@ -194,7 +193,7 @@ export class ConwayScene extends Scene {
     for (let y = 0; y < cells.length; ++y) {
       for (let x = 0; x < cells[y].length; ++x) {
         ctx.save();
-        this.renderCell(ctx, { x, y }, cells[y][x]);
+        this.renderCell(ctx, {x, y}, cells[y][x]);
         ctx.restore();
       }
     }
@@ -204,8 +203,8 @@ export class ConwayScene extends Scene {
       this.renderTrackedCell(ctx, trackedCell);
     }
 
-    ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
-    ctx.font = "24px monospace";
+    ctx.fillStyle = 'rgba(255, 255, 255, 1.0)';
+    ctx.font = '24px monospace';
     const stepCount = `${this._step}`;
     const statsMargin = 16.0;
     ctx.fillText(stepCount, statsMargin, this.bounds.height - statsMargin);
@@ -215,9 +214,9 @@ export class ConwayScene extends Scene {
     ctx: CanvasRenderingContext2D,
     address: CellAddress,
     alive: boolean,
-    debug = false
+    debug = false,
   ) {
-    const { width: cell_width, height: cell_height } = this.options.cell_size;
+    const {width: cell_width, height: cell_height} = this.options.cell_size;
     const x_margin = this.options.cell_margin;
     const y_margin = this.options.cell_margin;
 
@@ -225,31 +224,31 @@ export class ConwayScene extends Scene {
     const y = this.grid_offset.y + y_margin + address.y * cell_height;
 
     if (alive) {
-      ctx.fillStyle = "rgba(255, 255, 0, 0.75)";
+      ctx.fillStyle = 'rgba(255, 255, 0, 0.75)';
     } else {
-      ctx.fillStyle = "rgba(255, 0, 0, 0.25)";
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.25)';
     }
 
     ctx.fillRect(
       x,
       y,
       cell_width - x_margin * 2.0,
-      cell_height - y_margin * 2.0
+      cell_height - y_margin * 2.0,
     );
 
     if (debug) {
-      ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
-      ctx.font = "12px monospace";
+      ctx.fillStyle = 'rgba(255, 255, 255, 1.0)';
+      ctx.font = '12px monospace';
       ctx.fillText(
         `${address.x},${address.y}`,
         x + x_margin * 2.0,
-        y + cell_height - y_margin * 2.0 - 4.0
+        y + cell_height - y_margin * 2.0 - 4.0,
       );
     }
   }
 
   renderTrackedCell(ctx: CanvasRenderingContext2D, address: CellAddress) {
-    const { width: cell_width, height: cell_height } = this.options.cell_size;
+    const {width: cell_width, height: cell_height} = this.options.cell_size;
     const x_margin = this.options.cell_margin;
     const y_margin = this.options.cell_margin;
 
@@ -257,13 +256,13 @@ export class ConwayScene extends Scene {
     const y = this.grid_offset.y + y_margin + address.y * cell_height;
 
     ctx.save();
-    ctx.strokeStyle = "rgba(255, 0, 0, 0.75)";
+    ctx.strokeStyle = 'rgba(255, 0, 0, 0.75)';
     ctx.lineWidth = 4.0;
     ctx.strokeRect(
       x,
       y,
       cell_width - x_margin * 2.0,
-      cell_height - y_margin * 2.0
+      cell_height - y_margin * 2.0,
     );
     ctx.restore();
   }
@@ -280,10 +279,10 @@ export class ConwayScene extends Scene {
   draw(ctx: CanvasRenderingContext2D, elapsed: number) {
     // this.update(elapsed);
 
-    const { width: w, height: h } = this.size;
+    const {width: w, height: h} = this.size;
     ctx.clearRect(0.0, 0.0, w, h);
     ctx.save();
-    ctx.fillStyle = "black";
+    ctx.fillStyle = 'black';
     ctx.fillRect(0.0, 0.0, w, h);
     ctx.restore();
 

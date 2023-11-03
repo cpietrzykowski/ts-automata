@@ -1,50 +1,21 @@
-import { SceneAnimator, ScenePresenter } from "./canvas_stage";
-import { evolveWorld } from "./conway_world";
-import { FrameAnimationProvider } from "./dom";
-import { Scene, SceneRenderer2D, SceneSize } from "./scene";
+import { evolveWorld } from "./conway/conway_world";
+import { Scene } from "./scene";
 
-// cell alignment options
-// - center
-// - edge
-
-export interface SimpleConwayOptions {
-  cell_size: {
-    width: number;
-    height: number;
-  };
-
-  cell_margin: {
-    horizontal: number;
-    vertical: number;
-  };
-}
-
-export interface SimpleConwayWorldAddress {
-  x: number;
-  y: number;
-}
-
-export type AutomataWorldLayoutOptions = {
+type AutomataWorldLayoutOptions = {
   cellSize: number;
   worldPadding: number;
 };
 
-export class AutomataWorldLayout {
+class AutomataWorldRenderOptions {
   public static defaults: AutomataWorldLayoutOptions = {
     cellSize: 50.0,
     worldPadding: 10.0,
   };
-  protected _options: typeof AutomataWorldLayout.defaults;
+
+  protected _options: typeof AutomataWorldRenderOptions.defaults;
 
   constructor(options?: Partial<AutomataWorldLayoutOptions>) {
-    this._options = { ...AutomataWorldLayout.defaults, ...options };
-  }
-
-  public visibleWorldFromCanvas(width: number, height: number) {
-    return {
-      columns: 0,
-      rows: 0,
-    };
+    this._options = { ...AutomataWorldRenderOptions.defaults, ...options };
   }
 
   public cellSize() {
@@ -54,14 +25,19 @@ export class AutomataWorldLayout {
   public worldPadding() {
     return this._options.worldPadding;
   }
-
-  public getOffsets() {
-    return [0.0, 0.0];
-  }
 }
 
 export class AutomataWorldRenderer<CellStateType> {
-  constructor(public readonly layout: AutomataWorldLayout) {}
+  constructor(
+    public readonly options: AutomataWorldRenderOptions,
+    public readonly style: {
+      cursorStrokeWidth: number;
+      cursorStrokeStyle: string;
+    } = {
+      cursorStrokeStyle: "yellow",
+      cursorStrokeWidth: 2,
+    }
+  ) {}
 
   protected displayWidth = 0;
   protected displayHeight = 0;
@@ -79,8 +55,8 @@ export class AutomataWorldRenderer<CellStateType> {
     this.displayWidth = width;
     this.displayHeight = height;
 
-    const cellSize = this.layout.cellSize();
-    const worldPadding = this.layout.worldPadding() * 2.0;
+    const cellSize = this.options.cellSize();
+    const worldPadding = this.options.worldPadding() * 2.0;
     const xcount = Math.floor((width - worldPadding) / cellSize);
     const ycount = Math.floor((height - worldPadding) / cellSize);
     this._visibleSize = {
@@ -110,7 +86,7 @@ export class AutomataWorldRenderer<CellStateType> {
     state: CellStateType[],
     cursorPosition: { x: number; y: number }
   ) {
-    const cellSize = this.layout.cellSize();
+    const cellSize = this.options.cellSize();
     const { cols, rows } = this.worldSize();
     const { col: colOffset, row: rowOffset } = this._offsets;
 
@@ -128,91 +104,142 @@ export class AutomataWorldRenderer<CellStateType> {
         }
         context.restore();
 
-        context.font = "6px monospace";
+        context.font = "10px monospace";
         context.fillText(`${col}, ${row}`, x + 4.0, y + cellSize - 4.0);
       }
     }
 
     // render cell under cursor
     const cellAtCursor = this.getCellAt(cursorPosition.x, cursorPosition.y);
-
     context.save();
-    context.strokeStyle = "yellow";
-    context.lineWidth = 8;
+    context.strokeStyle = this.style.cursorStrokeStyle;
+    context.lineWidth = this.style.cursorStrokeWidth;
     context.strokeRect(
       colOffset + cellAtCursor[0] * cellSize,
       rowOffset + cellAtCursor[1] * cellSize,
       cellSize,
       cellSize
     );
+
+    context.fillStyle = "red";
+    context.font = "14px monospace";
+    context.textAlign = "center";
+    context.fillText(
+      `${cellAtCursor[0]}, ${cellAtCursor[1]}`,
+      colOffset + cellAtCursor[0] * cellSize + cellSize * 0.5,
+      rowOffset + cellAtCursor[1] * cellSize + cellSize * 0.5
+    );
     context.restore();
   }
 
   getCellAt(x: number, y: number) {
-    const cellSize = this.layout.cellSize();
+    const cellSize = this.options.cellSize();
     const { col: colOffset, row: rowOffset } = this._offsets;
     return [
       Math.floor((x - colOffset) / cellSize),
-      Math.floor((y - rowOffset) / cellSize),
+      Math.floor((rowOffset + y) / cellSize),
     ];
   }
 }
 
-function sceneAnimator(
-  context: CanvasRenderingContext2D,
-  renderer: SceneRenderer2D,
-  provider: FrameAnimationProvider,
-  maxUpdateInterval = 50
-): SceneAnimator {
-  let _needs_update = true;
-  let _last_ts = 0;
-  let _last_request_id = 0;
+// function sceneAnimator(
+//   context: CanvasRenderingContext2D,
+//   renderer: SceneRenderer2D,
+//   provider: FrameAnimationProvider,
+//   maxUpdateInterval = 50,
+//   chronoProvider = performance.now
+// ): SceneAnimator {
+//   let _needs_update = true;
+//   let _last_ts = 0;
+//   let _last_request_id = 0;
 
-  function _frame(ts: DOMHighResTimeStamp) {
-    if (_needs_update || ts - _last_ts > maxUpdateInterval) {
-      renderer.draw(context, ts - _last_ts);
-      _last_ts = ts;
-      _needs_update = false;
-    }
+//   function _frame(ts: DOMHighResTimeStamp) {
+//     if (_needs_update || ts - _last_ts > maxUpdateInterval) {
+//       renderer.draw(context, ts - _last_ts);
+//       _last_ts = ts;
+//       _needs_update = false;
+//     }
 
-    _last_request_id = provider.requestAnimationFrame(_frame);
-  }
+//     _last_request_id = provider.requestAnimationFrame(_frame);
+//   }
 
-  return {
-    setNeedsUpdate() {
-      _needs_update = true;
-    },
-    redraw() {
-      renderer.draw(context, 0);
-    },
-    play() {
-      _frame(0);
-    },
-    cancel() {
-      _last_ts = 0;
-      _needs_update = false;
-      provider.cancelAnimationFrame(_last_request_id);
-      _last_request_id = 0;
-    },
-  };
+//   return {
+//     setNeedsUpdate() {
+//       _needs_update = true;
+//     },
+//     redraw() {
+//       renderer.draw(context, 0);
+//     },
+//     play() {
+//       _frame(0);
+//     },
+//     stop() {
+//       _last_ts = 0;
+//       _needs_update = false;
+//       provider.cancelAnimationFrame(_last_request_id);
+//       _last_request_id = 0;
+//     },
+//   };
+// }
+
+class AutomataWorldSceneView {
+  constructor(bindings: {
+    playButton: HTMLButtonElement;
+    stopButton: HTMLButtonElement;
+  }) {}
 }
 
-export class AutomataWorldScene extends Scene implements SceneRenderer2D {
+export class AutomataWorldScene {
   private _bounds = new DOMRect(0, 0, 0, 0);
-  private _cursor_position = [0.0, 0.0];
+  private _cursor_position = { x: 0.0, y: 0.0 };
   private _world: boolean[] = [];
   private _world_renderer = new AutomataWorldRenderer(
-    new AutomataWorldLayout()
+    new AutomataWorldRenderOptions()
   );
 
-  constructor() {
-    super();
-  }
+  private _last_mouse_event?: MouseEvent;
 
   protected wasPresented(presenter: ScenePresenter): void {
     const ctx = Scene.GetCanvasContext2D(presenter.canvas);
-    const animator = sceneAnimator(ctx, this, presenter.doc);
-    animator.play();
+
+    const animator = sceneAnimator(ctx, this, presenter.wnd);
+
+    if (presenter.sceneControl !== undefined) {
+      const sceneControl = presenter.sceneControl;
+      const stopButton = presenter.doc.createElement("button");
+      stopButton.onclick = () => {
+        animator.stop();
+      };
+      stopButton.innerHTML = "&#x23f9; Stop";
+      sceneControl.appendChild(stopButton);
+
+      const pauseButton = presenter.doc.createElement("button");
+      pauseButton.innerHTML = "&#x23f8; Pause";
+      sceneControl.appendChild(pauseButton);
+
+      const playButton = presenter.doc.createElement("button");
+      playButton.onclick = () => {
+        animator.play();
+      };
+
+      playButton.innerHTML = "&#x23f5; Play";
+      sceneControl.appendChild(playButton);
+    }
+
+    const debugPanel = presenter.doc.getElementById("scene-debug");
+    if (debugPanel instanceof HTMLElement) {
+      const mousePosition = presenter.doc.createElement("pre");
+      debugPanel.appendChild(mousePosition);
+      presenter.canvas.addEventListener("mousemove", (event) => {
+        const b = presenter.canvas.getBoundingClientRect();
+        mousePosition.innerHTML = [
+          `${b.width} x ${b.height}`,
+          `${b.left} x ${b.top}`,
+          `${event.clientX} x ${event.clientY}`,
+          `${event.clientX - b.left} x ${event.clientY - b.top}`,
+        ].join("\n");
+      });
+    }
 
     presenter.canvas.addEventListener("mousemove", (event) => {
       this.onMouseMove(event as MouseEvent);
@@ -220,25 +247,36 @@ export class AutomataWorldScene extends Scene implements SceneRenderer2D {
   }
 
   onMouseMove(event: MouseEvent) {
-    const mouseX = event.x - this._bounds.left;
-    const mouseY = event.y - this._bounds.top;
-
-    this._cursor_position = [mouseX, mouseY];
+    this._last_mouse_event = event;
+    this._cursor_position = {
+      x: event.clientX - this._bounds.left,
+      y: event.clientY - this._bounds.top,
+    };
   }
 
-  protected static newWorld(width: number, height: number) {
-    return new Array(width * height).fill(false).map(function (_) {
-      return Math.random() > 0.9;
+  // returns a new "world" of `size` and activates cell's with `activity`
+  protected static randomWorld(
+    size: {
+      width: number;
+      height: number;
+    },
+    activity: number = 0.1
+  ) {
+    return new Array(size.width * size.height).fill(false).map(function (_) {
+      return activity > Math.random();
     });
   }
 
   protected sizeChanged(canvas: HTMLCanvasElement, size: SceneSize): void {
     this._bounds = canvas.getBoundingClientRect();
     const ctx = Scene.GetCanvasContext2D(canvas);
-    this.draw(ctx, 0);
     this._world_renderer.setDisplaySize(size.width, size.height);
     const worldSize = this._world_renderer.worldSize();
-    this._world = AutomataWorldScene.newWorld(worldSize.cols, worldSize.rows);
+    this._world = AutomataWorldScene.randomWorld({
+      width: worldSize.cols,
+      height: worldSize.rows,
+    });
+    this.draw(ctx, 0);
   }
 
   private _since_last_evolution: number = 0;
@@ -255,10 +293,26 @@ export class AutomataWorldScene extends Scene implements SceneRenderer2D {
     }
 
     context.clearRect(0.0, 0.0, width, height);
-    this._world_renderer.draw(context, this._world, {
-      x: this._cursor_position[0],
-      y: this._cursor_position[1],
-    });
+    this._world_renderer.draw(context, this._world, this._cursor_position);
+
+    if (this._last_mouse_event !== undefined) {
+      // helper for painting cursor
+      function cursorAt(x: number, y: number, color: string) {
+        context.save();
+
+        context.strokeStyle = color;
+        context.beginPath();
+        context.arc(x, y, 3.0, 0.0, 2.0 * Math.PI);
+        context.closePath();
+        context.stroke();
+
+        context.restore();
+      }
+
+      const lme = this._last_mouse_event;
+      cursorAt(lme.clientX, lme.clientY, "blue");
+      cursorAt(this._cursor_position.x, this._cursor_position.y, "green");
+    }
 
     context.save();
     context.lineWidth = 10;

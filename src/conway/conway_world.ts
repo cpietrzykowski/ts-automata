@@ -1,4 +1,4 @@
-import { CellAddress } from "./world";
+import { CellAddress } from "../world";
 
 export type Dimension2D = {
   width: number;
