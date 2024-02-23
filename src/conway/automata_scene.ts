@@ -9,6 +9,49 @@ class AutomataCell {
   ) {}
 }
 
+interface CellInspectorView {
+  setCell(col: number, row: number, cell: AutomataCell): void;
+}
+
+class NullCellInspectorView implements CellInspectorView {
+  setCell(col: number, row: number, cell: AutomataCell): void {}
+}
+
+class CellInspectorHTMLView implements CellInspectorView {
+  constructor(
+    protected addressValue: HTMLInputElement,
+    protected createdAtValue: HTMLInputElement,
+  ) {}
+
+  public static build(doc: Document, node: HTMLElement) {
+    const container = doc.createElement('div');
+    node.appendChild(container);
+
+    const addressLabel = doc.createElement('label');
+    addressLabel.innerHTML = 'address:';
+    container.appendChild(addressLabel);
+
+    const addressValue = doc.createElement('input');
+    addressValue.readOnly = true;
+    addressLabel.appendChild(addressValue);
+
+    const createdAtLabel = doc.createElement('label');
+    createdAtLabel.innerHTML = 'createdAt';
+    container.appendChild(createdAtLabel);
+
+    const createdAtValue = doc.createElement('input');
+    createdAtValue.readOnly = true;
+    createdAtLabel.appendChild(createdAtValue);
+
+    return new CellInspectorHTMLView(addressValue, createdAtValue);
+  }
+
+  public setCell(col: number, row: number, cell?: AutomataCell) {
+    this.addressValue.value = `${col}, ${row}`;
+    this.createdAtValue.value = `${cell?.createdAt}`;
+  }
+}
+
 class AutomataWorld {
   private _generation = 0;
   public t = 0;
@@ -45,11 +88,14 @@ class AutomataWorld {
 
     this._cells = [];
     for (let x = 0; x < w * h; ++x) {
+      const alive = Math.random();
+      let createdAt =
+        2.0 * (0.5 - Math.random()) * this.config.generationDuration;
+
       // const alive = this.t + Math.random();
       this._cells[x] = new AutomataCell(
         Math.random(),
-        // alive > 0.75 ? alive * 5000 : undefined,
-        undefined,
+        alive > 0.5 ? this.t + createdAt : undefined,
       );
     }
   }
@@ -60,10 +106,13 @@ class AutomataWorld {
       const c = this._cells[i];
       const createdAt = c.createdAt;
       if (createdAt === undefined) {
+        if (Math.random() > 0.5) {
+          c.createdAt = this.t + Math.random() * this.config.generationDuration;
+        }
         continue;
       }
 
-      if (this.t - createdAt > 5000) {
+      if (this.t - createdAt > this.config.generationDuration) {
         c.createdAt = undefined;
       }
     }
@@ -71,15 +120,6 @@ class AutomataWorld {
 
   public update(elapsed: number) {
     this.t += elapsed;
-    for (let i = 0; i < this._cells.length; ++i) {
-      const c = this._cells[i];
-      const createdAt = c.createdAt;
-      if (createdAt === undefined) {
-        if (Math.random() > 0.999) {
-          c.createdAt = this.t + Math.random() * this.config.generationDuration;
-        }
-      }
-    }
 
     if (this.t - this._last_generation > this.config.generationDuration) {
       this.evolve();
@@ -100,9 +140,45 @@ class AutomataWorld {
 export interface AutomataSceneConfig {
   cellSize: number;
   cellPadding: number;
+  highlightColor: string;
 }
 
 class AutomataWorldRenderer {
+  protected debugCellAddress(
+    context: CanvasRenderingContext2D,
+    col: number,
+    row: number,
+    atX: number,
+    atY: number,
+  ) {
+    context.font = '12px monospace';
+    context.fillStyle = 'black';
+    context.textAlign = 'start';
+    context.textBaseline = 'top';
+    context.fillText(`${col},${row}`, atX + 4, atY + 4);
+  }
+
+  protected renderCellDebugView(
+    context: CanvasRenderingContext2D,
+    c: number,
+    atX: number,
+    atY: number,
+    sz: number,
+  ) {
+    const formattedC = c.toFixed(2);
+    const midX = sz / 2.0;
+    const midY = midX;
+    context.strokeText(`${formattedC}`, atX + midX, atY + midY);
+    context.fillStyle = 'black';
+    context.fillText(`${formattedC}`, atX + midX, atY + midY);
+
+    // context.fillStyle = 'white';
+    // context.textAlign = 'start';
+    // context.textBaseline = 'bottom';
+    // context.font = '8px monospace';
+    // context.fillText(`${cellColor}`, atX, atY + sz);
+  }
+
   public renderCell(
     context: CanvasRenderingContext2D,
     cellX: number,
@@ -123,47 +199,35 @@ class AutomataWorldRenderer {
     context.strokeStyle = 'white';
     context.lineWidth = 2;
 
+    context.fillStyle = deadCellColor;
+    context.fillRect(
+      atX + padding,
+      atY + padding,
+      sz - 2 * padding,
+      sz - 2 * padding,
+    );
+
     if (cell.createdAt !== undefined) {
-      let c = 1.0 - Math.min(1.0, Math.max(0.0, (t - cell.createdAt) / 5000));
-      const r = cell.period * c * (255 - 100) + 100;
-      const g = cell.period * c * (255 - 100) + 100;
-      const b = cell.period * c * (255 - 100) + 100;
+      let c = (t - cell.createdAt) / 5000.0;
+      if (c > 0.0) {
+        c = 1.0 - Math.min(1.0, c);
+        const r = (c * (255 - 100) + 100).toFixed(1);
+        const g = (c * (255 - 100) + 100).toFixed(1);
+        const b = (cell.period * (c * (255 - 100)) + 100).toFixed(1);
 
-      const cellColor = `rgb(${r.toFixed(1)} ${g.toFixed(1)} ${b.toFixed(1)})`;
-      context.fillStyle = cellColor;
-      context.fillRect(
-        atX + padding,
-        atY + padding,
-        sz - 2 * padding,
-        sz - 2 * padding,
-      );
-
-      const formattedC = c.toFixed(2);
-      const midX = sz / 2.0;
-      const midY = midX;
-      context.strokeText(`${formattedC}`, atX + midX, atY + midY);
-      context.fillText(`${formattedC}`, atX + midX, atY + midY);
-
-      context.fillStyle = 'white';
-      context.textAlign = 'start';
-      context.textBaseline = 'bottom';
-      context.font = '8px monospace';
-      context.fillText(`${cellColor}`, atX, atY + sz);
-    } else {
-      context.fillStyle = deadCellColor;
-      context.fillRect(
-        atX + padding,
-        atY + padding,
-        sz - 2 * padding,
-        sz - 2 * padding,
-      );
+        const cellColor = `rgb(${r} ${g} ${b})`;
+        context.fillStyle = cellColor;
+        context.fillRect(
+          atX + padding,
+          atY + padding,
+          sz - 2 * padding,
+          sz - 2 * padding,
+        );
+      }
+      // this.renderCellDebugView(context, c, atX, atY, sz);
     }
 
-    context.font = '12px monospace';
-    context.fillStyle = 'black';
-    context.textAlign = 'start';
-    context.textBaseline = 'top';
-    context.fillText(`${cellX},${cellY}`, atX + 4, atY + 4);
+    // this.debugCellAddress(context, cellX, cellY, atX, atY);
   }
 
   public highlightCell(
@@ -172,14 +236,14 @@ class AutomataWorldRenderer {
     atRow: number,
     config: AutomataSceneConfig,
   ) {
-    const {cellSize: sz, cellPadding: padding} = config;
-    context.strokeStyle = 'yellow';
-    context.lineWidth = 3;
+    const {cellSize: sz, cellPadding: padding, highlightColor} = config;
+    context.strokeStyle = highlightColor;
+    context.lineWidth = 5;
     context.strokeRect(
-      atCol * sz + padding,
-      atRow * sz + padding,
-      sz - 2 * padding,
-      sz - 2 * padding,
+      atCol * sz - 2.0 * padding,
+      atRow * sz - 2.0 * padding,
+      sz + 4.0 * padding,
+      sz + 4.0 * padding,
     );
   }
 }
@@ -196,6 +260,9 @@ export interface SceneBounds {
  */
 
 export class AutomataScene extends Scene2D {
+  // ui
+  protected cellInspector: CellInspectorView = new NullCellInspectorView();
+
   private _world = new AutomataWorld({
     generationDuration: 5000,
   });
@@ -207,7 +274,8 @@ export class AutomataScene extends Scene2D {
   constructor(
     public readonly config: AutomataSceneConfig = {
       cellSize: 64,
-      cellPadding: 0.1,
+      cellPadding: 0.5,
+      highlightColor: 'yellow',
     },
   ) {
     super();
@@ -241,7 +309,6 @@ export class AutomataScene extends Scene2D {
       Math.ceil(size.height / cellSize),
     );
     this._world.populate();
-    this.invalidate();
   }
 
   protected getCellAt(x: number, y: number) {
@@ -251,9 +318,10 @@ export class AutomataScene extends Scene2D {
     return [col, row];
   }
 
-  public draw(context: CanvasRenderingContext2D, elapsed: number): void {
+  public draw(elapsed: number): void {
     const rect = this.size;
     const {cellSize} = this.config;
+    const {context} = this;
     context.clearRect(0, 0, rect.width, rect.height);
 
     const world = this._world;
@@ -289,6 +357,12 @@ export class AutomataScene extends Scene2D {
       cellAtCursor[1],
       this.config,
     );
+
+    this.cellInspector.setCell(
+      cellAtCursor[0],
+      cellAtCursor[1],
+      world.getCell(cellAtCursor[0], cellAtCursor[1]),
+    );
   }
 
   protected onMouseMove(canvas: HTMLCanvasElement, event: MouseEvent): void {
@@ -303,44 +377,37 @@ export class AutomataScene extends Scene2D {
   }
 
   public setup(stage: Stage): void {
+    super.setup(stage);
     const canvas = stage.canvas;
     stage.doc.addEventListener('mousemove', (event) => {
       this.onMouseMove(stage.canvas, event as MouseEvent);
     });
 
+    // turn off context menu events
+    canvas.addEventListener('contextmenu', (event) => event.preventDefault());
+
     // canvas.addEventListener("mousedown", (event) =>
     //   this.onMouseDown(event as MouseEvent)
     // );
-    canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
     stage.canvas.addEventListener('click', (event) =>
       this.onMouseClick(stage.canvas, event as MouseEvent),
     );
 
-    const sceneControl = stage.sceneControl;
-    if (sceneControl === undefined) {
-      return;
-    }
-
-    Object.entries({
-      // evolution step button
-      step: () => {
-        this._world.evolve();
-        this.invalidate();
-      },
-      // play (start animating evolution) button
-      play: () => {
-        this.dispatchEvent(new Event('play'));
-      },
-      // stop (stop animating) button
-      stop: () => {
-        this.dispatchEvent(new Event('stop'));
-      },
-    }).forEach(function ([k, v]) {
-      const e = stage.doc.createElement('button');
-      e.innerText = k;
-      e.addEventListener('click', v);
-      sceneControl.appendChild(e);
+    const sceneControls = stage.doc.createElement('div');
+    stage.sceneDock?.appendChild(sceneControls);
+    const stepButton = stage.doc.createElement('button');
+    stepButton.innerText = 'Step';
+    stepButton.addEventListener('click', () => {
+      this._world.evolve();
+      stage.redraw();
     });
+    sceneControls.appendChild(stepButton);
+
+    // setup cell inspector ui
+    this.cellInspector = CellInspectorHTMLView.build(
+      stage.doc,
+      stage.sceneDock!,
+    );
   }
 }

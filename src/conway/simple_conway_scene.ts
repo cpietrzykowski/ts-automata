@@ -1,8 +1,8 @@
-import { SimpleConwayWorld, evolveWorld } from "./conway_world";
-import { Scene2D } from "../scene";
-import { SceneSize } from "../scene/scene";
-import { Stage } from "../stage";
-import { Graphics2D } from "../graphics";
+import {SimpleConwayWorld, evolveWorld} from './conway_world';
+import {Scene2D} from '../scene';
+import {SceneSize} from '../scene/scene';
+import {Stage} from '../stage';
+import {Graphics2D} from '../graphics';
 
 // export interface SceneAnimator {
 //   requestRedraw(): void;
@@ -87,9 +87,9 @@ export class SimpleConwayScene extends Scene2D {
 
   public setSize(size: SceneSize): void {
     super.setSize(size);
-    const { width: scene_width, height: scene_height } = size;
+    const {width: scene_width, height: scene_height} = size;
 
-    const { width: cell_width, height: cell_height } = this._options.cell_size;
+    const {width: cell_width, height: cell_height} = this._options.cell_size;
 
     function _offset_from_grid_center(l: number, c: number) {
       return l / 2.0 - Math.ceil(l / 2.0 / c) * c;
@@ -103,7 +103,7 @@ export class SimpleConwayScene extends Scene2D {
     this._grid_offset.y = _offset_from_grid_center(scene_height, cell_height);
     const x_cells = Math.ceil((scene_width - this._grid_offset.x) / cell_width);
     const y_cells = Math.ceil(
-      (scene_height - this._grid_offset.y) / cell_height
+      (scene_height - this._grid_offset.y) / cell_height,
     );
 
     this._world = {
@@ -126,7 +126,7 @@ export class SimpleConwayScene extends Scene2D {
     //   { passive: true }
     // );
 
-    stage.canvas.addEventListener("mousemove", (event) => {
+    stage.canvas.addEventListener('mousemove', (event) => {
       this.onMouseMove(stage.canvas, event as MouseEvent);
     });
 
@@ -135,8 +135,8 @@ export class SimpleConwayScene extends Scene2D {
     // );
     // canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 
-    stage.canvas.addEventListener("click", (event) =>
-      this.onMouseClick(stage.canvas, event as MouseEvent)
+    stage.canvas.addEventListener('click', (event) =>
+      this.onMouseClick(stage.canvas, event as MouseEvent),
     );
 
     const sceneControl = stage.sceneControl;
@@ -145,9 +145,9 @@ export class SimpleConwayScene extends Scene2D {
     }
 
     // evolution step button
-    const evolveButton = stage.doc.createElement("button");
-    evolveButton.innerText = "step";
-    evolveButton.addEventListener("click", () => {
+    const evolveButton = stage.doc.createElement('button');
+    evolveButton.innerText = 'step';
+    evolveButton.addEventListener('click', () => {
       this._evolve_tick = 0;
       this._world.cells = evolveWorld(this._world.cells, {
         width: this._world.width,
@@ -158,18 +158,18 @@ export class SimpleConwayScene extends Scene2D {
     sceneControl.appendChild(evolveButton);
 
     // play (start animating evolution) button
-    const playButton = stage.doc.createElement("button");
-    playButton.innerText = "play";
-    playButton.addEventListener("click", () => {
-      this.dispatchEvent(new Event("play"));
+    const playButton = stage.doc.createElement('button');
+    playButton.innerText = 'play';
+    playButton.addEventListener('click', () => {
+      this.dispatchEvent(new Event('play'));
     });
     sceneControl.appendChild(playButton);
 
     // stop (stop animating) button
-    const stopButton = stage.doc.createElement("button");
-    stopButton.innerText = "stop";
-    stopButton.addEventListener("click", () => {
-      this.dispatchEvent(new Event("stop"));
+    const stopButton = stage.doc.createElement('button');
+    stopButton.innerText = 'stop';
+    stopButton.addEventListener('click', () => {
+      this.dispatchEvent(new Event('stop'));
     });
     sceneControl.appendChild(stopButton);
   }
@@ -179,7 +179,7 @@ export class SimpleConwayScene extends Scene2D {
   }
 
   protected onMouseClick(canvas: HTMLCanvasElement, event: MouseEvent): void {
-    const { left, top } = this._bounds;
+    const {left, top} = this._bounds;
     const mouseX = event.x - left;
     const mouseY = event.y - top;
 
@@ -189,7 +189,7 @@ export class SimpleConwayScene extends Scene2D {
       cell_size_x: number,
       cell_size_y: number,
       offset_x: number,
-      offset_y: number
+      offset_y: number,
     ) {
       return {
         x: Math.floor((x - offset_x) / cell_size_x),
@@ -203,7 +203,7 @@ export class SimpleConwayScene extends Scene2D {
       this._options.cell_size.width,
       this._options.cell_size.height,
       this._grid_offset.x,
-      this._grid_offset.y
+      this._grid_offset.y,
     );
 
     this._world.cells[this_cell.y * this._world.width + this_cell.x] = true;
@@ -213,38 +213,38 @@ export class SimpleConwayScene extends Scene2D {
     context: CanvasRenderingContext2D,
     i: number,
     j: number,
-    alive: boolean
+    alive: boolean,
   ) {
-    const { width: cell_width, height: cell_height } = this._options.cell_size;
-    const { horizontal: x_margin, vertical: y_margin } =
+    const {width: cell_width, height: cell_height} = this._options.cell_size;
+    const {horizontal: x_margin, vertical: y_margin} =
       this._options.cell_margin;
-    const { x: x_offset, y: y_offset } = this._grid_offset;
+    const {x: x_offset, y: y_offset} = this._grid_offset;
 
     // draw cell background
-    context.strokeStyle = "#0aa8";
+    context.strokeStyle = '#0aa8';
     context.lineWidth = 1.0;
     context.strokeRect(
       x_offset + cell_width * i,
       y_offset + cell_height * j,
       cell_width,
-      cell_height
+      cell_height,
     );
 
-    context.fillStyle = "#00aaaa";
+    context.fillStyle = '#00aaaa';
     context.fillRect(
       x_offset + x_margin + cell_width * i,
       y_offset + y_margin + cell_height * j,
       cell_width - x_margin * 2.0,
-      cell_height - y_margin * 2.0
+      cell_height - y_margin * 2.0,
     );
 
     if (alive === true) {
-      context.fillStyle = "yellow";
+      context.fillStyle = 'yellow';
       context.fillRect(
         x_offset + x_margin + cell_width * i,
         y_offset + y_margin + cell_height * j,
         cell_width - x_margin * 2.0,
-        cell_height - y_margin * 2.0
+        cell_height - y_margin * 2.0,
       );
     }
   }
@@ -258,13 +258,13 @@ export class SimpleConwayScene extends Scene2D {
       });
       this._evolve_tick = 0;
     }
-    const { width: sceneWidth, height: sceneHeight } = this.size;
+    const {width: sceneWidth, height: sceneHeight} = this.size;
 
     // draw cell grid
-    const { width: world_width, height: world_height, cells } = this._world;
+    const {width: world_width, height: world_height, cells} = this._world;
 
     // context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-    context.fillStyle = "black";
+    context.fillStyle = 'black';
     context.fillRect(0, 0, sceneWidth, sceneHeight);
 
     for (let y = 0; y < world_height; ++y) {
@@ -288,7 +288,7 @@ export class SimpleConwayScene extends Scene2D {
     };
 
     context.save();
-    context.strokeStyle = "red";
+    context.strokeStyle = 'red';
     context.lineWidth = 5.0;
     const crosshairLength = 50.0;
     const halfCrosshairLength = 0.5 * crosshairLength;

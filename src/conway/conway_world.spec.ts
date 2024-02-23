@@ -1,27 +1,27 @@
-import test from "ava";
+import test from 'ava';
 import {
   ConwaysWorld,
   ConwaysWrappedWorld,
   IConwaysWorld,
   cellNeighbors,
   evolveWorld,
-} from "./conway_world";
-import { examples } from "./conway_patterns";
+} from './conway_world';
+import {examples} from './conway_patterns';
 
-test("cell neighbors (fixed world)", (t) => {
+test('cell neighbors (fixed world)', (t) => {
   const w: IConwaysWorld = new ConwaysWorld();
   w.setSize({
     width: 10,
     height: 10,
   });
 
-  w.setCell({ x: 0, y: 0 }, true);
+  w.setCell({x: 0, y: 0}, true);
 
-  t.deepEqual(w.neighbors({ x: 0, y: 0 }), [false, false, false]);
+  t.deepEqual(w.neighbors({x: 0, y: 0}), [false, false, false]);
 
-  t.deepEqual(w.neighbors({ x: 9, y: 9 }), [false, false, false]);
+  t.deepEqual(w.neighbors({x: 9, y: 9}), [false, false, false]);
 
-  t.deepEqual(w.neighbors({ x: 4, y: 4 }), [
+  t.deepEqual(w.neighbors({x: 4, y: 4}), [
     false,
     false,
     false,
@@ -33,16 +33,16 @@ test("cell neighbors (fixed world)", (t) => {
   ]);
 });
 
-test("cell neighbors (wrapped world)", (t) => {
+test('cell neighbors (wrapped world)', (t) => {
   const w: IConwaysWorld = new ConwaysWrappedWorld();
   w.setSize({
     width: 10,
     height: 10,
   });
 
-  w.setCell({ x: 0, y: 0 }, true);
+  w.setCell({x: 0, y: 0}, true);
 
-  t.deepEqual(w.neighbors({ x: 0, y: 0 }), [
+  t.deepEqual(w.neighbors({x: 0, y: 0}), [
     false,
     false,
     false,
@@ -53,7 +53,7 @@ test("cell neighbors (wrapped world)", (t) => {
     false,
   ]);
 
-  t.deepEqual(w.neighbors({ x: 9, y: 9 }), [
+  t.deepEqual(w.neighbors({x: 9, y: 9}), [
     false,
     false,
     false,
@@ -64,7 +64,7 @@ test("cell neighbors (wrapped world)", (t) => {
     true,
   ]);
 
-  t.deepEqual(w.neighbors({ x: 4, y: 4 }), [
+  t.deepEqual(w.neighbors({x: 4, y: 4}), [
     false,
     false,
     false,
@@ -76,7 +76,7 @@ test("cell neighbors (wrapped world)", (t) => {
   ]);
 });
 
-test("neighbor algorithm", (t) => {
+test('neighbor algorithm', (t) => {
   t.deepEqual(cellNeighbors(0, 0, 3, 3), [
     [1, 0],
     [0, 1],
@@ -101,8 +101,8 @@ test("neighbor algorithm", (t) => {
   ]);
 });
 
-test("conway patterns (still lifes: block)", (t) => {
-  const pattern = examples["stillLifes"]["block"];
+test('conway patterns (still lifes: block)', (t) => {
+  const pattern = examples['stillLifes']['block'];
   const w = ConwaysWorld.fromPattern(pattern[0]);
   t.deepEqual(w, pattern[0].flat());
 
@@ -112,12 +112,12 @@ test("conway patterns (still lifes: block)", (t) => {
       height: pattern[0].length,
       width: pattern[0][0].length,
     }),
-    pattern[0].flat()
+    pattern[0].flat(),
   );
 });
 
-test("conway patterns (oscillator: blinker)", (t) => {
-  const pattern = examples["oscillator"]["blinker"];
+test('conway patterns (oscillator: blinker)', (t) => {
+  const pattern = examples['oscillator']['blinker'];
   const w = ConwaysWorld.fromPattern(pattern[0]);
   t.deepEqual(w, pattern[0].flat());
   const step1 = evolveWorld(w, {

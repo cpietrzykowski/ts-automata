@@ -1,4 +1,4 @@
-import { CellAddress } from "../world";
+import {CellAddress} from '../world';
 
 export type Dimension2D = {
   width: number;
@@ -16,7 +16,7 @@ export interface SimpleConwayWorld {
  */
 export function evolveCell(
   isAlive: boolean,
-  livingNeighbours: number
+  livingNeighbours: number,
 ): boolean {
   // Any live cell with fewer than two live neighbours dies, as if by underpopulation.
   // Any live cell with two or three live neighbours lives on to the next generation.
@@ -43,7 +43,7 @@ export function cellNeighbors(
   y: number,
   w: number,
   h: number,
-  d = 1
+  d = 1,
 ) {
   const n: [number, number][] = [];
   const min_offsety = -Math.min(y, d);
@@ -68,7 +68,7 @@ export function evolveWorld(state: boolean[], size: Dimension2D) {
     state.length === size.height * size.width,
     `world size invalid (got ${size.width * size.height} expected ${
       state.length
-    })`
+    })`,
   );
 
   const next: boolean[] = [];
@@ -134,14 +134,14 @@ export class ConwaysWorld implements IConwaysWorld {
 
   public neighbors(cell: CellAddress) {
     return [
-      { x: cell.x - 1, y: cell.y - 1 },
-      { x: cell.x, y: cell.y - 1 },
-      { x: cell.x + 1, y: cell.y - 1 },
-      { x: cell.x - 1, y: cell.y },
-      { x: cell.x + 1, y: cell.y },
-      { x: cell.x - 1, y: cell.y + 1 },
-      { x: cell.x, y: cell.y + 1 },
-      { x: cell.x + 1, y: cell.y + 1 },
+      {x: cell.x - 1, y: cell.y - 1},
+      {x: cell.x, y: cell.y - 1},
+      {x: cell.x + 1, y: cell.y - 1},
+      {x: cell.x - 1, y: cell.y},
+      {x: cell.x + 1, y: cell.y},
+      {x: cell.x - 1, y: cell.y + 1},
+      {x: cell.x, y: cell.y + 1},
+      {x: cell.x + 1, y: cell.y + 1},
     ]
       .map((a) => this.cellAt(a))
       .filter((c): c is boolean => c !== undefined);
@@ -149,8 +149,8 @@ export class ConwaysWorld implements IConwaysWorld {
 
   public evolve() {
     function next(
-      world: ConwaysWorld["_cells"],
-      neighborProvider: ConwaysWorld["neighbors"]
+      world: ConwaysWorld['_cells'],
+      neighborProvider: ConwaysWorld['neighbors'],
     ) {
       const nextState: typeof world = [];
 
@@ -158,9 +158,7 @@ export class ConwaysWorld implements IConwaysWorld {
         nextState.push([]);
         for (let x = 0; x < world[y].length; ++x) {
           nextState[y].push();
-          const livingNeighbors = neighborProvider({ x, y }).filter(function (
-            c
-          ) {
+          const livingNeighbors = neighborProvider({x, y}).filter(function (c) {
             return c;
           });
 
@@ -220,7 +218,7 @@ export class ConwaysWorld implements IConwaysWorld {
   //   return w;
   // }
 
-  public static fromPattern(pattern: ConwaysWorld["_cells"]) {
+  public static fromPattern(pattern: ConwaysWorld['_cells']) {
     const world: boolean[] = [];
     for (let y = 0; y < pattern.length; ++y) {
       for (let x = 0; x < pattern[y].length; ++x) {

@@ -8,12 +8,13 @@
       html,
       body {
         margin: 0;
-        font-size: max(1em, calc(0.5em + 2vw));
+        font-size: max(1em, calc(0.5em + 1vw));
+        font-family: sans-serif;
       }
 
       #stage {
         box-sizing: border-box;
-        padding: 2em;
+        padding: 0.5em 2em;
         height: 100vh;
         min-height: 600px;
         flex-grow: 1;
@@ -26,34 +27,30 @@
         flex-grow: 1;
         flex-direction: column;
         min-width: 0;
-        box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.75);
       }
 
-      #scene-canvas {
+      #stage-canvas {
         display: flex;
         flex-grow: 1;
         min-height: 0;
+        box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.75);
       }
 
-      #scene-canvas > canvas {
+      #stage-canvas > canvas {
         flex-grow: 1;
       }
 
-      #scene-control {
+      #stage-dock {
         padding: 1em 5em;
         display: flex;
         justify-content: center;
+        flex-direction: column;
+        align-items: center;
         column-gap: .5em;
       }
     </style>
   </head>
   <body>
-    <div id="stage">
-      <div>
-        <div id="scene-canvas"></div>
-        <div id="scene-control"></div>
-        <div id="scene-debug"></div>
-      </div>
-    </div>
+    <div id="stage"></div>
   </body>
 </html>
