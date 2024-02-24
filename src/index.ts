@@ -1,3 +1,5 @@
+import "./styles.css";
+
 import {AutomataScene} from './conway';
 import {Stage} from './stage';
 

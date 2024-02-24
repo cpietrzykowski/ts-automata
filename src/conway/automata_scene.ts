@@ -399,6 +399,7 @@ export class AutomataScene extends Scene2D {
     const stepButton = stage.doc.createElement('button');
     stepButton.innerText = 'Step';
     stepButton.addEventListener('click', () => {
+      stage.stop();
       this._world.evolve();
       stage.redraw();
     });
