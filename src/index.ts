@@ -1,6 +1,6 @@
-import "./styles.css";
+import './styles.css';
 
-import {AutomataScene} from './conway';
+import {ConwayScene} from './automata';
 import {Stage} from './stage';
 
-Stage.start(new AutomataScene());
+Stage.start(new ConwayScene());

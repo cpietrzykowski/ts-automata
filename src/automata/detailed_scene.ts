@@ -1,6 +1,6 @@
-import {Scene2D} from '../scene';
-import {SceneSize} from '../scene/scene';
-import {Stage} from '../stage';
+import { Scene2D } from '../scene';
+import { SceneSize } from '../scene/scene';
+import { Stage } from '../stage';
 
 class AutomataCell {
   public constructor(
@@ -9,15 +9,8 @@ class AutomataCell {
   ) {}
 }
 
-interface CellInspectorView {
-  setCell(col: number, row: number, cell: AutomataCell): void;
-}
 
-class NullCellInspectorView implements CellInspectorView {
-  setCell(col: number, row: number, cell: AutomataCell): void {}
-}
-
-class CellInspectorHTMLView implements CellInspectorView {
+class WorldInspectorHTMLView  {
   constructor(
     protected addressValue: HTMLInputElement,
     protected createdAtValue: HTMLInputElement,
@@ -28,7 +21,7 @@ class CellInspectorHTMLView implements CellInspectorView {
     node.appendChild(container);
 
     const addressLabel = doc.createElement('label');
-    addressLabel.innerHTML = 'address:';
+    addressLabel.innerHTML = 'address';
     container.appendChild(addressLabel);
 
     const addressValue = doc.createElement('input');
@@ -43,11 +36,11 @@ class CellInspectorHTMLView implements CellInspectorView {
     createdAtValue.readOnly = true;
     createdAtLabel.appendChild(createdAtValue);
 
-    return new CellInspectorHTMLView(addressValue, createdAtValue);
+    return new WorldInspectorHTMLView(addressValue, createdAtValue);
   }
 
   public setCell(col: number, row: number, cell?: AutomataCell) {
-    this.addressValue.value = `${col}, ${row}`;
+    this.addressValue.value = `(${col}, ${row})`;
     this.createdAtValue.value = `${cell?.createdAt}`;
   }
 }
@@ -261,7 +254,7 @@ export interface SceneBounds {
 
 export class AutomataScene extends Scene2D {
   // ui
-  protected cellInspector: CellInspectorView = new NullCellInspectorView();
+  protected worldInspector!: WorldInspectorHTMLView;
 
   private _world = new AutomataWorld({
     generationDuration: 5000,
@@ -358,7 +351,7 @@ export class AutomataScene extends Scene2D {
       this.config,
     );
 
-    this.cellInspector.setCell(
+    this.worldInspector.setCell(
       cellAtCursor[0],
       cellAtCursor[1],
       world.getCell(cellAtCursor[0], cellAtCursor[1]),
@@ -406,7 +399,7 @@ export class AutomataScene extends Scene2D {
     sceneControls.appendChild(stepButton);
 
     // setup cell inspector ui
-    this.cellInspector = CellInspectorHTMLView.build(
+    this.worldInspector = WorldInspectorHTMLView.build(
       stage.doc,
       stage.sceneDock!,
     );

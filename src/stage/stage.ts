@@ -31,7 +31,6 @@ function createResizeObserverFor(
   return ro;
 }
 
-
 function createSceneAnimator(
   scene: Scene,
   animationProvider: FrameAnimationProvider,
@@ -60,20 +59,20 @@ function createSceneAnimator(
       if (last_ticket === undefined) {
         return;
       }
-  
+
       cancelAnimationFrame(last_ticket);
     },
     start() {
       if (state === 'running') {
         this.stop();
       }
-  
+
       if (last_ticket !== undefined) {
         cancelAnimationFrame(last_ticket);
       }
-  
+
       state = 'running';
-      last_ticket = requestAnimationFrame(frame);;
+      last_ticket = requestAnimationFrame(frame);
     },
     redraw() {
       last_ticket = requestAnimationFrame((ts) => {
@@ -84,7 +83,6 @@ function createSceneAnimator(
     },
   };
 }
-
 
 /**
  * Stage is context agnostic
@@ -131,21 +129,29 @@ export class Stage implements ScenePresenter {
 
     const theCanvas = this.canvas;
 
+    // setup initial canvas size
+    let lastSize: ElementSize = {
+      width: canvasParent.clientWidth,
+      height: canvasParent.clientHeight,
+    };
+
+    theCanvas.width = lastSize.width;
+    theCanvas.height = lastSize.height;
+    scene.setSize(theCanvas, lastSize);
+
+    scene.setup(this);
+
     createResizeObserverFor(canvasParent, (size: ElementSize) => {
+      if (size.width === lastSize.width && size.height === lastSize.height) {
+        return;
+      }
+
+      lastSize = size;
+
       theCanvas.width = size.width;
       theCanvas.height = size.height;
       scene.setSize(theCanvas, size);
       this.animator.redraw();
-    });
-
-    scene.setup(this);
-
-    // setup initial canvas size
-    theCanvas.width = canvasParent.clientWidth;
-    theCanvas.height = canvasParent.clientHeight;
-    scene.setSize(theCanvas, {
-      width: theCanvas.width,
-      height: theCanvas.height,
     });
     this.animator.redraw();
   }

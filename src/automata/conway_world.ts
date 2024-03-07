@@ -108,8 +108,18 @@ export interface IConwaysWorldRenderer {
  */
 export class ConwaysWorld implements IConwaysWorld {
   protected _cells: boolean[][] = [];
+  public size: Dimension2D = {width: 0, height: 0};
 
-  setSize(size: Dimension2D): void {
+  public randomize(): void {
+    for (let y = 0; y < this.size.height; ++y) {
+      for (let x = 0; x < this.size.width; ++x) {
+        this._cells[y][x] = Math.random() > 0.8;
+      }
+    }
+  }
+
+  public setSize(size: Dimension2D): void {
+    this.size = size;
     for (let y = 0; y < size.height; ++y) {
       if (y > this._cells.length - 1) {
         this._cells.push(new Array(size.width).fill(false));
@@ -128,8 +138,8 @@ export class ConwaysWorld implements IConwaysWorld {
     }
   }
 
-  state(): boolean[][] {
-    return this._cells;
+  public state(): boolean[][] {
+    return this._cells.slice();
   }
 
   public neighbors(cell: CellAddress) {
